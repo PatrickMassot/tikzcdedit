@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>tikzcd edit</title>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="tikzcdedit.css">
+</head>
+<body>
+
+<div id="tikzcd-edit" class="container-fluid">
+<div class="page-header">
+	<h1>tikcd editor</h1>
+</div>
+<div class="row">
+	<div class="col-xs-12 col-md-2">
+		<div class="panel panel-default">
+         <div class="panel-heading">
+			 General controls
+		 </div>
+         <div class="panel-body">
+		  <div class="row margin"> <!-- col row -->
+			<div class="col-xs-3">
+				Columns
+			</div>
+			<div class="col-xs-9">
+				<div class="btn-group" role="group" aria-label="...">
+					<button class="btn btn-primary" @click="addCol">
+						<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+					</button>
+					<button class="btn btn-primary" @click="delCol" v-if="nodes[0].length > 1">
+						<span class="glyphicon glyphicon-minus-sign" aria-hidden="true"></span>
+					</button>
+				</div>
+			</div>
+		  </div> <!-- col row -->
+		  <div class="row margin"><!-- row row -->
+			<div class="col-xs-3">
+				Rows
+			</div>
+			<div class="col-xs-9">
+				<div class="btn-group" role="group" aria-label="...">
+					<button class="btn btn-primary" @click="addRow">
+						<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+					</button>
+					<button class="btn btn-primary" @click="delRow" v-if="nodes.length > 1">
+						<span class="glyphicon glyphicon-minus-sign" aria-hidden="true"></span>
+					</button>
+				</div>
+			</div>
+		  </div><!-- row row -->
+		  <div class="row margin"> <!-- scale row -->
+			<div class="col-xs-3">
+				Scale
+			</div>
+			<div class="col-xs-9">
+				<div class="btn-group" role="group" aria-label="...">
+					<button class="btn btn-primary" @click="scaleUp">
+						<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+					</button>
+					<button class="btn btn-primary" @click="scaleDown" v-if="nodes.length > 1">
+						<span class="glyphicon glyphicon-minus-sign" aria-hidden="true"></span>
+					</button>
+				</div>
+			</div>
+		  </div><!-- row row -->
+		 </div> <!-- panel body -->
+		</div> <!-- panel -->
+	</div>
+	<div class="col-xs-12 col-md-10">
+		<div class="panel panel-default">
+         <div class="panel-heading">
+			 Diagram
+		 </div>
+         <div class="panel-body">
+    <svg :height="height" :width="width">
+    	<defs>
+    		<marker id="arrowhead" viewBox="0 0 60 60" refX="44" refY="34" markerUnits="strokeWidth" markerWidth="8" markerHeight="10" orient="auto">
+    			<path d="M 0 0 L 60 30 L 0 60 z" /> 
+    		</marker>
+    		<marker id="arrowhead-active" class="active" viewBox="0 0 60 60" refX="44" refY="34" markerUnits="strokeWidth" markerWidth="8" markerHeight="10" orient="auto">
+    			<path d="M 0 0 L 60 30 L 0 60 z" /> 
+    		</marker>
+    		<marker id="twoarrowhead-active" class="active" viewBox="0 0 60 60" refX="44" refY="34" markerUnits="strokeWidth" markerWidth="8" markerHeight="10" orient="auto">
+    			<path d="M 0 0 L 30 30 L 0 60 z"/> 
+    			<path d="M 30 0 L 60 30 L 30 60 z"/> 
+    		</marker>
+    		<marker id="hook" class="nofill" viewBox="0 0 15 15" refX="5" refY="9"
+		   	markerUnits="strokeWidth" markerWidth="10" markerHeight="10" 
+			orient="auto">
+    			<path d="M 5 1 A 4 4 0 1 0 5 9" /> 
+    		</marker>
+    		<marker id="hook-active" class="active nofill" viewBox="0 0 15 15" refX="5" refY="9"
+		   	markerUnits="strokeWidth" markerWidth="10" markerHeight="10" 
+			orient="auto">
+    			<path d="M 5 1 A 4 4 0 1 0 5 9"/> 
+    		</marker>
+    	</defs>
+    	<template v-for="row in nodes">
+    		<template v-for="node in row">
+    		 <g 
+    		   :class="{active: isNodeActive(node), node: true}"
+    		   @click="click_node(node, $event)">
+    		   <circle v-if="!node.label" r="5px" 
+    			 :cx="conv(node.j)" :cy="conv(node.i)" 
+    			 ></circle>
+    		   <text v-if="node.label"
+    			 class="node"
+    			 :x="conv(node.j)" :y="conv(node.i)" 
+    		   >{{ node.label }}</text>
+    		 </g>
+    		 <g v-for="arrow in node.arrows" 
+    			   :class="{active: isArrowActive(arrow), arrow: true}"
+    		     @click="click_arrow(arrow, $event)">
+    			 <path 
+    				:d="arrow_path(arrow)"
+		            :stroke-dasharray="arrow_dash(arrow)"
+    				:marker-start="arrow_marker_start(arrow)"
+    				:marker-end="arrow_marker_end(arrow)">
+    			 </path>
+    			 <text v-if="arrow.label" 
+    					class="arrow-label"
+    					:x="arrow_label_pos(arrow).x"
+    					:y="arrow_label_pos(arrow).y">
+    				 {{arrow.label }}
+    			 </text>
+    		 </g>
+    	  </template>
+    	</template>
+    </svg>
+	</div>
+	</div>
+	</div>
+	</div> <!-- row -->
+  <div class="row">
+  <div class="col-xs-12">
+  <div class="panel panel-default">
+  <div class="panel-heading">Active element</div>
+  <div v-if="!(active_node.i || active_arrow.start.i)" class="panel-body">
+	  Select a node or arrow by left click.
+  </div>
+  <div v-if="active_node.i" class="panel-body">
+	  <div class="form-group">
+		<label for="label">
+					 Node label 
+		</label>
+		<input type="text" id="label" v-model="active_node.label"
+		ref="nodeLabel" class="form-control"/>
+	  </div>
+	  Control-click another node to create an arrow
+  </div>
+  <div v-if="active_arrow.start.i" class="panel-body">
+	  <div class="form-group col-xs-12 col-sm-6">
+			<label for="arrow-label">
+						 Arrow label
+			</label>
+			<input type="text" id="arrow-label" v-model="active_arrow.label"
+			ref="arrowLabel" class="form-control"/>
+	  </div>
+	  <div class="form-group col-xs-12 col-sm-2">
+			<label for="arrow-type">
+						 Arrow type
+			</label>
+			<select v-model="active_arrow.type" class="form-control">
+			  <option value="rightarrow">――→</option>
+			  <option value="dashrightarrow">- - - →</option>
+			  <option value="hookrightarrow"> ↪ </option>
+			  <option value="twoheadrightarrow"> ↠ </option>
+			</select>
+	  </div>
+	  <div class="checkbox col-xs-12" v-if="active_arrow.label">
+			<label for="arrow-swap"> <input type="checkbox" id="arrow-swap" v-model="active_arrow.swap">Swap</label>
+	  </div>
+	  <div class="col-xs-12">
+	<button class="btn btn-danger" @click="delArrow(active_arrow)">
+		<span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+	</button>
+	  </div>
+  </div>
+</div>
+</div>
+</div>
+<div class="row">
+<div class="col-xs-12">
+  <div class="panel panel-default">
+  <div class="panel-heading">tikzcd source code</div>
+  <div class="panel-body">
+	<pre class="tikz">{{ tikzsource }}</pre>
+  </div>
+  </div>
+</div>
+</div>
+</div>
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<script src="tikzcdedit.js"></script>
+</body>
+</html>
