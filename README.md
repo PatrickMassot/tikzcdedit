@@ -14,16 +14,21 @@ the awesome [VueJS](http://vuejs.org/) framework to do all
 the data-binding work and [bootstrap3](http://getbootstrap.com/) to make
 the interface look nice.
 
+![tikzcdedit screenshot](screen-shot.png)
+
 ## Install
 
-Put all three files in the same repository and open ``tikzcdedit.html``
-in a modern web browser, either from a local disk or through a web
-server.
+You can directly use the [online version](https://patrickmassot.github.io/tikzcdedit/).
 
-If you want to be able to use this tool without an internet connection then
-you need to download [bootstrap3](http://getbootstrap.com/) and
-[VueJS](http://vuejs.org/) and replace the external links in ``tikzcdedit.html``
-with links pointing towards your local copy.
+If you want to host this app, put all three files ``tikzcdedit.*`` in
+the same directory and open ``tikzcdedit.html`` in a modern web
+browser, either from a local disk or through a web server.
+
+If you want to be able to use this tool without an internet connection
+then, in addition to the aforementioned three files, you need to
+download [bootstrap3](http://getbootstrap.com/) and
+[VueJS](http://vuejs.org/) and replace the external links in
+``tikzcdedit.html`` with links pointing towards your local copy.
 
 ## Use
 
